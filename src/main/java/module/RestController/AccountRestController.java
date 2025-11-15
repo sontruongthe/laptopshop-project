@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,97 +14,95 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import module.DAO.AccountDAO;
 import module.DAO.AccountRoleDAO;
-import module.DAO.RoleDAO;
 import module.Domain.Account;
 import module.Domain.AccountRoles;
 import module.Domain.Role;
+import module.Services.AccountService;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping("restAccount")
 public class AccountRestController {
+	
 	@Autowired
-	BCryptPasswordEncoder bCryptPasswordEncoder;
-	@Autowired
-	AccountDAO aDao;
+	private AccountService accountService;
+	
 	@Autowired
 	AccountRoleDAO Dao;
-	@Autowired
-	RoleDAO roleDao;
 
 	@GetMapping("/accounts")
 	public ResponseEntity<List<Account>> getAll() {
-
-		return ResponseEntity.ok(aDao.findAll());
+		return ResponseEntity.ok(accountService.getAllAccounts());
 	}
 
 	@GetMapping("/accountRole")
 	public ResponseEntity<List<AccountRoles>> getAllAccRole() {
-
-		return ResponseEntity.ok(Dao.findAll());
+		return ResponseEntity.ok(accountService.getAllAccountRoles());
 	}
 
 	@GetMapping("/Role")
 	public ResponseEntity<List<Role>> getRole() {
-		return ResponseEntity.ok(roleDao.findAll());
+		return ResponseEntity.ok(accountService.getAllRoles());
 	}
 
 	@GetMapping("/accounts/{username}")
 	public ResponseEntity<Account> getOne(@PathVariable("username") String username) {
-		if (!aDao.existsById(username)) {
+		Account account = accountService.getAccountByEmail(username);
+		if (account == null) {
 			return ResponseEntity.notFound().build();
 		}
-		aDao.findById(username).get().setPassword(bCryptPasswordEncoder.encode(aDao.findById(username).get().getPassword()));
-		return ResponseEntity.ok(aDao.findById(username).get());
+		return ResponseEntity.ok(account);
 	}
+	
 	@GetMapping("/accountss/{username}")
 	public ResponseEntity<Account> getOneAccount(@PathVariable("username") String username) {
-		if (!aDao.existsById(username)) {
+		Account account = accountService.getAccountByEmailWithoutEncryption(username);
+		if (account == null) {
 			return ResponseEntity.notFound().build();
 		}
-		
-		return ResponseEntity.ok(aDao.findById(username).get());
+		return ResponseEntity.ok(account);
 	}
+	
 	@GetMapping("/Role/USER")
 	public ResponseEntity<Role> getOneRole() {
-		return ResponseEntity.ok(roleDao.findById("USER").get());
+		return ResponseEntity.ok(accountService.getUserRole());
 	}
 
 	@PostMapping("/accounts")
 	public ResponseEntity<Account> Post(@RequestBody Account account) {
-		if (aDao.existsById(account.getEmail())) {
+		try {
+			Account created = accountService.createAccount(account);
+			return ResponseEntity.ok(created);
+		} catch (Exception e) {
 			return ResponseEntity.badRequest().build();
 		}
-		
-		aDao.save(account);
-
-		return ResponseEntity.ok(account);
 	}
 
 	@PostMapping("/accountRole")
 	public ResponseEntity<AccountRoles> PostAccRole(@RequestBody AccountRoles accountRole) {
-		Dao.save(accountRole);
-		return ResponseEntity.ok(accountRole);
+		AccountRoles created = accountService.createAccountRole(accountRole);
+		return ResponseEntity.ok(created);
 	}
 
 	@PutMapping("/accounts/{username}")
 	public ResponseEntity<Account> Put(@PathVariable("username") String username, @RequestBody Account account) {
-		if (!aDao.existsById(username)) {
+		try {
+			Account updated = accountService.updateAccount(username, account);
+			return ResponseEntity.ok(updated);
+		} catch (Exception e) {
 			return ResponseEntity.notFound().build();
 		}
-		aDao.save(account);
-		return ResponseEntity.ok(account);
 	}
 
 	@DeleteMapping("/accounts/{username}")
 	public ResponseEntity<Void> Delete(@PathVariable("username") String username) {
-		if (!aDao.existsById(username)) {
+		try {
+			accountService.deleteAccount(username);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
 			return ResponseEntity.notFound().build();
 		}
-		aDao.deleteById(username);
-		return ResponseEntity.ok().build();
 	}
 
 	@DeleteMapping("/accountRole/{id}")

@@ -218,7 +218,6 @@ myapp.controller("ctrlLogin",function($scope, $http,$timeout){
             var itemcart = {
               cartID: 0,
               accountCart: res.data,
-              amount: 0
             }
             console.log(itemcart);
             $http.post(`http://localhost:8080/CartItem/cartItems`,itemcart).then(function(resp){

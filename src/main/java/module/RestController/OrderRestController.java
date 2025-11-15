@@ -14,65 +14,68 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import module.DAO.OrderDAO;
 import module.Domain.Order;
+import module.Services.OrderService;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping("order")
 public class OrderRestController {
+	
 	@Autowired
-	OrderDAO oDao;
+	private OrderService orderService;
 
 	@GetMapping("/Orders")
 	public ResponseEntity<List<Order>> getAllOrder() {
-		return ResponseEntity.ok(oDao.findAll());
+		return ResponseEntity.ok(orderService.getAllOrders());
 	}
 
 	@GetMapping("/Order/{orderid}")
 	public ResponseEntity<Order> getOne(@PathVariable("orderid") Integer orderId) {
-		if (!oDao.existsById(orderId)) {
+		Order order = orderService.getOrderById(orderId);
+		if (order == null) {
 			return ResponseEntity.notFound().build();
 		}
-		return ResponseEntity.ok(oDao.findById(orderId).get());
+		return ResponseEntity.ok(order);
 	}
 
 	@GetMapping("/Orders/{username}")
 	public ResponseEntity<List<Order>> getOrdering(@PathVariable("username") String username) {
-
-		return ResponseEntity.ok(oDao.findOrderingByUsername(username));
+		return ResponseEntity.ok(orderService.getOrderingByUsername(username));
 	}
 
 	@GetMapping("/Ordered/{username}")
 	public ResponseEntity<List<Order>> getOrdered(@PathVariable("username") String username) {
-
-		return ResponseEntity.ok(oDao.findOrderedByUsername(username));
+		return ResponseEntity.ok(orderService.getOrderedByUsername(username));
 	}
 
 	@PostMapping("/Order")
 	public ResponseEntity<Order> Post(@RequestBody Order order) {
-		if (oDao.existsById(order.getOrderID())) {
+		try {
+			Order created = orderService.createOrder(order);
+			return ResponseEntity.ok(created);
+		} catch (Exception e) {
 			return ResponseEntity.badRequest().build();
 		}
-
-		return ResponseEntity.ok(oDao.save(order));
 	}
 
 	@PutMapping("/Order/{orderid}")
 	public ResponseEntity<Order> Put(@PathVariable("orderid") Integer orderid, @RequestBody Order order) {
-		if (!oDao.existsById(orderid)) {
+		try {
+			Order updated = orderService.updateOrder(orderid, order);
+			return ResponseEntity.ok(updated);
+		} catch (Exception e) {
 			return ResponseEntity.notFound().build();
 		}
-		oDao.save(order);
-		return ResponseEntity.ok(order);
 	}
 
 	@DeleteMapping("/Order/{orderid}")
 	public ResponseEntity<Void> Delete(@PathVariable("orderid") Integer orderid) {
-		if (!oDao.existsById(orderid)) {
+		try {
+			orderService.deleteOrder(orderid);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
 			return ResponseEntity.notFound().build();
 		}
-		oDao.deleteById(orderid);
-		return ResponseEntity.ok().build();
 	}
 }
