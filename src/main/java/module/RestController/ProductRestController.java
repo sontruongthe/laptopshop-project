@@ -14,63 +14,58 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import module.DAO.ProductDAO;
 import module.Domain.Products;
-import module.Services.ProductService;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping("restProduct")
 public class ProductRestController {
-	
 	@Autowired
-	private ProductService productService;
+	ProductDAO pDao;
 
 	@GetMapping("/products")
 	public ResponseEntity<List<Products>> getAll() {
-		return ResponseEntity.ok(productService.getAllProducts());
+		return ResponseEntity.ok(pDao.findAll());
 	}
 
 	@GetMapping("/category/{categoryid}")
 	public ResponseEntity<List<Products>> getproductcate(@PathVariable("categoryid") Integer categoryid) {
-		return ResponseEntity.ok(productService.getProductsByCategory(categoryid));
+		return ResponseEntity.ok(pDao.findByCategory(categoryid));
 	}
 
 	@GetMapping("/products/{productID}")
 	public ResponseEntity<Products> getOne(@PathVariable("productID") Integer productID) {
-		Products product = productService.getProductById(productID);
-		if (product == null) {
+		if (!pDao.existsById(productID)) {
 			return ResponseEntity.notFound().build();
 		}
-		return ResponseEntity.ok(product);
+		return ResponseEntity.ok(pDao.findById(productID).get());
 	}
 
 	@PostMapping("/products")
 	public ResponseEntity<Products> Post(@RequestBody Products product) {
-		try {
-			Products created = productService.createProduct(product);
-			return ResponseEntity.ok(created);
-		} catch (Exception e) {
+		if (pDao.existsById(product.getProductID())) {
 			return ResponseEntity.badRequest().build();
 		}
+		pDao.save(product);
+		return ResponseEntity.ok(product);
 	}
 
 	@PutMapping("/products/{productID}")
 	public ResponseEntity<Products> Put(@PathVariable("productID") Integer productID, @RequestBody Products product) {
-		try {
-			Products updated = productService.updateProduct(productID, product);
-			return ResponseEntity.ok(updated);
-		} catch (Exception e) {
+		if (!pDao.existsById(productID)) {
 			return ResponseEntity.notFound().build();
 		}
+		pDao.save(product);
+		return ResponseEntity.ok(product);
 	}
 
 	@DeleteMapping("/products/{productID}")
 	public ResponseEntity<Void> Delete(@PathVariable("productID") Integer productID) {
-		try {
-			productService.deleteProduct(productID);
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
+		if (!pDao.existsById(productID)) {
 			return ResponseEntity.notFound().build();
 		}
+		pDao.deleteById(productID);
+		return ResponseEntity.ok().build();
 	}
 }
