@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\main",
+    "\\src\\main\\resources",
+    "\\src\\main\\resources\\static",
+    "\\src\\main\\resources\\static\\Admin",
+    "\\src\\main\\resources\\static\\Adminform",
+    "\\src\\main\\resources\\static\\Adminform\\pages",
+    "\\src\\main\\resources\\static\\Admin\\MainJs",
+    "\\src\\test"
+  ],
+  "SelectedNode": "\\src\\main\\resources\\static\\Admin\\MainJs\\statiscal.js",
+  "PreviewInSolutionExplorer": false
+}
