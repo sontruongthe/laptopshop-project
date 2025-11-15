@@ -12,20 +12,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import module.DAO.AccountDAO;
 import module.DAO.OrderDetailDAO;
 import module.DTO.Email;
 import module.Domain.Order;
 import module.Domain.OrderDetail;
 import module.Services.EmailService;
-import module.Services.SessionService;
+import module.Services.OTPService;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping("send")
 public class sendMailRestApi {
+	
 	@Autowired
-	SessionService session;
+	private OTPService otpService;
 
 	@Autowired
 	OrderDetailDAO ODrepo;
@@ -33,69 +33,42 @@ public class sendMailRestApi {
 	@Autowired
 	EmailService emaildao;
 
-	@Autowired
-	AccountDAO Urepo;
-
 	@PostMapping("/otptest") // Gửi OTP để xác thực người dùng
 	public ResponseEntity<Integer> sendtest(@RequestBody Email email) {
-		int random_otp = (int) Math.floor(Math.random() * (999999 - 100000 + 1) + 100000);
-		if (Urepo.existsById(email.getTo())) {
+		try {
+			int otp = otpService.sendOTPRegister(email.getTo(), email.getSubject());
+			return ResponseEntity.ok(otp);
+		} catch (Exception e) {
+			// Email đã tồn tại
 			return ResponseEntity.notFound().build();
 		}
-
-		String body = "Mã OTP CỦA BẠN LÀ: " + random_otp;
-		session.set("otp", random_otp);
-
-		emaildao.sendmail(email.getTo(), email.getSubject(), body);
-
-		return ResponseEntity.ok(random_otp);
 	}
 
-	@PostMapping("/otp-forgot")//Gửi OTP quên mật khẩu
+	@PostMapping("/otp-forgot") // Gửi OTP quên mật khẩu
 	public ResponseEntity<Integer> sendotpforgot(@RequestBody Email email) {
-		int random_otp = (int) Math.floor(Math.random() * (999999 - 100000 + 1) + 100000);
-		if (!Urepo.existsById(email.getTo())) {
+		try {
+			int otp = otpService.sendOTPForgotPassword(email.getTo(), email.getSubject());
+			return ResponseEntity.ok(otp);
+		} catch (Exception e) {
+			// Email không tồn tại
 			return ResponseEntity.notFound().build();
 		}
-		String body = "Mã OTP ĐỂ LẤY LẠI MẬT KHẨU LÀ: " + random_otp;
-		session.set("otpforgot", random_otp);
-
-		emaildao.sendmail(email.getTo(), email.getSubject(), body);
-
-		return ResponseEntity.ok(random_otp);
 	}
 
 	@GetMapping("/maotpforgot")
 	public Integer maOTPForgot() {
-		try {
-			int otp = session.get("otpforgot");
-			System.out.println(otp);
-			return otp;
-		} catch (Exception e) {
-			int randomotp = (int) Math.floor(Math.random() * (9999999 - 1000000 + 1) + 1000000);
-			return randomotp;
-		}
-	
+		return otpService.getOTPForgotFromSession();
 	}
 
 	@GetMapping("/maotp")
 	public Integer maOTP() {
-		try {
-		int otp = session.get("otp");
-		System.out.println(otp);
-		return otp;
-		}catch (Exception e) {
-			int randomotp = (int) Math.floor(Math.random() * (9999999 - 1000000 + 1) + 1000000);
-			return randomotp;
-		}
+		return otpService.getOTPFromSession();
 	}
 
 	@GetMapping("removeSession")
 	public String removeotp() {
-	        session.remove("otpforgot");
-	        session.remove("otp");
-	        return "Thanh Cong";
-	    }
+		return otpService.removeOTPSession();
+	}
 
 	
 	public String format(String number) {
