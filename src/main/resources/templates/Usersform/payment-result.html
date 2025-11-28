@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{Usersform/layoutSite.html}">
+
+<head>
+    <title>Kết quả thanh toán - T-MART</title>
+    <style>
+        .payment-result-container {
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+        .payment-result-box {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+        .payment-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .payment-icon.success {
+            color: #28a745;
+        }
+        .payment-icon.failed {
+            color: #dc3545;
+        }
+        .payment-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .payment-message {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .payment-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .payment-detail-row:last-child {
+            border-bottom: none;
+        }
+        .payment-detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .payment-detail-value {
+            color: #212529;
+        }
+        .payment-buttons {
+            margin-top: 30px;
+        }
+        .btn-payment {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary-payment {
+            background: #ff4136;
+            color: #fff;
+        }
+        .btn-primary-payment:hover {
+            background: #e6251a;
+            color: #fff;
+        }
+        .btn-secondary-payment {
+            background: #6c757d;
+            color: #fff;
+        }
+        .btn-secondary-payment:hover {
+            background: #5a6268;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body layout:fragment="content">
+    <!-- Bradcaump area -->
+    <div class="ht__bradcaump__area"
+        style="background: rgba(0, 0, 0, 0) url(/User/images/bg/2.jpg) no-repeat scroll center center / cover;">
+        <div class="ht__bradcaump__wrap">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="bradcaump__inner text-center">
+                            <h2 class="bradcaump-title">Kết quả thanh toán</h2>
+                            <nav class="bradcaump-inner">
+                                <a class="breadcrumb-item" href="/">Home</a>
+                                <span class="brd-separetor">/</span>
+                                <span class="breadcrumb-item active">Payment Result</span>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Result Container -->
+    <div class="payment-result-container">
+        <div class="payment-result-box">
+            <!-- Success Icon -->
+            <div th:if="${status == 'success'}" class="payment-icon success">
+                <i class="fa fa-check-circle"></i>
+            </div>
+            
+            <!-- Failed Icon -->
+            <div th:if="${status == 'failed' || status == 'error'}" class="payment-icon failed">
+                <i class="fa fa-times-circle"></i>
+            </div>
+            
+            <!-- Title -->
+            <h2 class="payment-title" th:text="${status == 'success' ? 'Thanh toán thành công!' : 'Thanh toán thất bại!'}"></h2>
+            
+            <!-- Message -->
+            <p class="payment-message" th:text="${message}"></p>
+            
+            <!-- Payment Details (chỉ hiển thị khi có dữ liệu payment) -->
+            <div class="payment-details" th:if="${payment != null}">
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Mã đơn hàng:</span>
+                    <span class="payment-detail-value" th:text="${order.orderID}"></span>
+                </div>
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Mã giao dịch:</span>
+                    <span class="payment-detail-value" th:text="${payment.transactionID ?: 'N/A'}"></span>
+                </div>
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Số tiền:</span>
+                    <span class="payment-detail-value">
+                        <span th:text="${#numbers.formatInteger(payment.amount, 0, 'COMMA')}"></span> VNĐ
+                    </span>
+                </div>
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Phương thức:</span>
+                    <span class="payment-detail-value" th:text="${payment.paymentMethod}"></span>
+                </div>
+                <div class="payment-detail-row" th:if="${payment.bankCode != null}">
+                    <span class="payment-detail-label">Ngân hàng:</span>
+                    <span class="payment-detail-value" th:text="${payment.bankCode}"></span>
+                </div>
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Thời gian:</span>
+                    <span class="payment-detail-value" 
+                          th:text="${#dates.format(payment.paymentDate, 'dd/MM/yyyy HH:mm:ss')}"></span>
+                </div>
+                <div class="payment-detail-row">
+                    <span class="payment-detail-label">Trạng thái:</span>
+                    <span class="payment-detail-value" 
+                          th:text="${payment.paymentStatus == 'SUCCESS' ? 'Thành công' : 'Thất bại'}"
+                          th:style="${payment.paymentStatus == 'SUCCESS' ? 'color: #28a745; font-weight: bold;' : 'color: #dc3545; font-weight: bold;'}"></span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="payment-buttons">
+                <a href="/order" class="btn-payment btn-primary-payment">
+                    <i class="fa fa-list"></i> Xem đơn hàng
+                </a>
+                <a href="/" class="btn-payment btn-secondary-payment">
+                    <i class="fa fa-home"></i> Về trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script xóa giỏ hàng nếu thanh toán thành công -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var shouldClearCart = /*[[${shouldClearCart}]]*/ false;
+        
+        if (shouldClearCart) {
+            // Lấy danh sách cart items cần xóa từ sessionStorage
+            var pendingCartItems = sessionStorage.getItem('pendingCartItems');
+            
+            if (pendingCartItems) {
+                try {
+                    var cartDetailIDs = JSON.parse(pendingCartItems);
+                    
+                    // Xóa từng cart item
+                    cartDetailIDs.forEach(function(cartDetailID) {
+                        fetch('http://localhost:8080/CartItem/cartItemDetail/' + cartDetailID, {
+                            method: 'DELETE'
+                        }).then(function(response) {
+                            console.log('Deleted cart item:', cartDetailID);
+                        }).catch(function(error) {
+                            console.error('Error deleting cart item:', error);
+                        });
+                    });
+                    
+                    // Xóa khỏi sessionStorage sau khi xóa xong
+                    sessionStorage.removeItem('pendingCartItems');
+                    
+                } catch (e) {
+                    console.error('Error parsing cart items:', e);
+                }
+            }
+        }
+        /*]]>*/
+    </script>
+</body>
+
+</html>
